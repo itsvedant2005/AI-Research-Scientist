@@ -5,20 +5,28 @@ from pdf_utils import extract_text
 from rag.utils import chunk_text
 from rag.embeddings import get_embeddings
 from rag.vectorstore import create_index, search
-
 from groq_service import ask_gemini
 
 import os
 
-app = FastAPI()
+app = FastAPI(title="AI Research Scientist API")
+
+# ----------------------------
+# Startup Event
+# ----------------------------
+@app.on_event("startup")
+async def startup():
+    print("✅ FastAPI started successfully")
 
 # ----------------------------
 # CORS
 # ----------------------------
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "*"  # Change to your frontend URL after deployment
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,42 +35,32 @@ app.add_middleware(
 # ----------------------------
 # Upload Folder
 # ----------------------------
-
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ----------------------------
 # Home
 # ----------------------------
-
 @app.get("/")
 def home():
-    return {"message": "API Working"}
+    return {
+        "status": "success",
+        "message": "AI Research Scientist API is running"
+    }
 
 # ----------------------------
 # Basic AI Chat
 # ----------------------------
-
 @app.get("/ask")
 def ask(question: str):
-
-    answer = ask_gemini(question)
-
-    return {
-        "answer": answer
-    }
+    return {"answer": ask_gemini(question)}
 
 # ----------------------------
 # Upload PDF
 # ----------------------------
-
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
-
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        file.filename
-    )
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
 
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
@@ -75,62 +73,47 @@ async def upload_pdf(file: UploadFile = File(...)):
 # ----------------------------
 # Read PDF
 # ----------------------------
-
 @app.get("/read-pdf")
 def read_pdf(filename: str):
+    file_path = os.path.join(UPLOAD_DIR, filename)
 
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        filename
-    )
+    if not os.path.exists(file_path):
+        return {"error": "File not found"}
 
     text = extract_text(file_path)
 
-    return {
-        "text": text[:3000]
-    }
+    return {"text": text[:3000]}
 
 # ----------------------------
 # Ask PDF
 # ----------------------------
-
 @app.get("/ask-pdf")
 def ask_pdf(filename: str, question: str):
+    file_path = os.path.join(UPLOAD_DIR, filename)
 
-    pdf_text = extract_text(
-        os.path.join(
-            UPLOAD_DIR,
-            filename
-        )
-    )
+    if not os.path.exists(file_path):
+        return {"error": "File not found"}
+
+    pdf_text = extract_text(file_path)
 
     prompt = f"""
-    Answer the question using only the document.
+Answer the question using only the document.
 
-    Document:
-    {pdf_text}
+Document:
+{pdf_text}
 
-    Question:
-    {question}
-    """
+Question:
+{question}
+"""
 
-    answer = ask_gemini(prompt)
-
-    return {
-        "answer": answer
-    }
+    return {"answer": ask_gemini(prompt)}
 
 # ----------------------------
-# Index PDF For RAG
+# Index PDF
 # ----------------------------
-
 @app.post("/index-pdf")
 async def index_pdf(file: UploadFile = File(...)):
-
-    file_path = os.path.join(
-        UPLOAD_DIR,
-        file.filename
-    )
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
 
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
@@ -141,10 +124,7 @@ async def index_pdf(file: UploadFile = File(...)):
 
     vectors = get_embeddings(chunks)
 
-    create_index(
-        vectors,
-        chunks
-    )
+    create_index(vectors, chunks)
 
     return {
         "message": "PDF Indexed Successfully",
@@ -152,150 +132,101 @@ async def index_pdf(file: UploadFile = File(...)):
     }
 
 # ----------------------------
-# RAG Question Answering
+# Ask RAG
 # ----------------------------
-
 @app.get("/ask-rag")
 def ask_rag(question: str):
+    query_vector = get_embeddings([question])[0]
 
-    query_vector = get_embeddings(
-        [question]
-    )[0]
+    relevant_chunks = search(query_vector)
 
-    relevant_chunks = search(
-        query_vector
-    )
-
-    context = "\n".join(
-        relevant_chunks
-    )
+    context = "\n".join(relevant_chunks)
 
     prompt = f"""
-    Answer using only the context.
+Answer using only the context.
 
-    Context:
-    {context}
+Context:
+{context}
 
-    Question:
-    {question}
-    """
+Question:
+{question}
+"""
 
-    answer = ask_gemini(prompt)
-
-    return {
-        "answer": answer
-    }
+    return {"answer": ask_gemini(prompt)}
 
 # ----------------------------
 # Literature Review
 # ----------------------------
-
 @app.get("/literature-review")
 def literature_review():
-
     from rag.vectorstore import stored_chunks
 
     if not stored_chunks:
+        return {"review": "No PDF indexed yet."}
 
-        return {
-            "review": "No PDF indexed yet."
-        }
-
-    context = "\n".join(
-        stored_chunks[:10]
-    )
+    context = "\n".join(stored_chunks[:10])
 
     prompt = f"""
-    You are a research assistant.
+You are a research assistant.
 
-    Based on the following content:
+Based on the following content:
 
-    {context}
+{context}
 
-    Generate:
+Generate:
+1. Summary
+2. Key Findings
+3. Research Trends
+4. Limitations
+5. Future Scope
+"""
 
-    1. Summary
-    2. Key Findings
-    3. Research Trends
-    4. Limitations
-    5. Future Scope
-
-    Format clearly.
-    """
-
-    review = ask_gemini(prompt)
-
-    return {
-        "review": review
-    }
+    return {"review": ask_gemini(prompt)}
 
 # ----------------------------
-# Research Gap Finder
+# Research Gap
 # ----------------------------
-
 @app.get("/research-gap")
 def research_gap():
-
     from rag.vectorstore import stored_chunks
 
     if not stored_chunks:
+        return {"research_gaps": "No PDF indexed yet."}
 
-        return {
-            "research_gaps": "No PDF indexed yet."
-        }
-
-    context = "\n".join(
-        stored_chunks[:10]
-    )
+    context = "\n".join(stored_chunks[:10])
 
     prompt = f"""
-    You are an AI Research Scientist.
+Analyze the following research content.
 
-    Analyze the following research content:
+{context}
 
-    {context}
+Identify:
+1. Research Gaps
+2. Limitations
+3. Unexplored Areas
+4. Opportunities for Future Work
+"""
 
-    Identify:
-
-    1. Research Gaps
-    2. Limitations
-    3. Unexplored Areas
-    4. Opportunities for Future Work
-
-    Format clearly.
-    """
-
-    gap_report = ask_gemini(prompt)
-
-    return {
-        "research_gaps": gap_report
-    }
+    return {"research_gaps": ask_gemini(prompt)}
 
 # ----------------------------
-# Proposal Generator
+# Proposal
 # ----------------------------
-
 @app.get("/proposal")
 def proposal(topic: str):
-
     prompt = f"""
-    Generate a research proposal on:
+Generate a research proposal on:
 
-    {topic}
+{topic}
 
-    Include:
+Include:
+- Title
+- Abstract
+- Problem Statement
+- Objectives
+- Methodology
+- Expected Outcomes
+- Future Scope
+"""
 
-    Title
-    Abstract
-    Problem Statement
-    Objectives
-    Methodology
-    Expected Outcomes
-    Future Scope
-    """
-
-    proposal_text = ask_gemini(prompt)
-
-    return {
-        "proposal": proposal_text
-    }
+    return {"proposal": ask_gemini(prompt)}
