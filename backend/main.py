@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pdf_utils import extract_text
 from rag.utils import chunk_text
 from rag.embeddings import get_embeddings
-from rag.vectorstore import create_index, search, stored_chunks
+import rag.vectorstore as vectorstore
 from groq_service import ask_gemini
 
 import os
@@ -173,7 +173,7 @@ async def index_pdf(file: UploadFile = File(...)):
 
     vectors = get_embeddings(chunks)
 
-    create_index(vectors, chunks)
+    vectorstore.create_index(vectors, chunks)
 
     return {
         "message": "PDF indexed successfully.",
@@ -189,7 +189,7 @@ def ask_rag(question: str):
 
     query_vector = get_embeddings([question])[0]
 
-    relevant_chunks = search(query_vector)
+    relevant_chunks = vectorstore.search(query_vector)
 
     if not relevant_chunks:
         return {
@@ -219,12 +219,12 @@ Question:
 @app.get("/literature-review")
 def literature_review():
 
-    if not stored_chunks:
+    if not vectorstore.stored_chunks:
         return {
             "review": "No PDF indexed yet."
         }
 
-    context = "\n".join(stored_chunks[:10])
+    context = "\n".join(vectorstore.stored_chunks[:10])
 
     prompt = f"""
 Generate a literature review based on the following content.
@@ -251,12 +251,12 @@ Include:
 @app.get("/research-gap")
 def research_gap():
 
-    if not stored_chunks:
+    if not vectorstore.stored_chunks:
         return {
             "research_gaps": "No PDF indexed yet."
         }
 
-    context = "\n".join(stored_chunks[:10])
+    context = "\n".join(vectorstore.stored_chunks[:10])
 
     prompt = f"""
 Analyse the following research content.
