@@ -16,7 +16,7 @@ export default function Review() {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:8000/literature-review"
+        "https://ai-research-backend-lala.onrender.com/literature-review"
       );
 
       setReview(

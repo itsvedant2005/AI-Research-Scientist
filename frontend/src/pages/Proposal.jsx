@@ -25,7 +25,7 @@ export default function Proposal() {
       setLoading(true);
 
       const res = await axios.get(
-        `http://localhost:8000/proposal?topic=${encodeURIComponent(topic)}`
+        `https://ai-research-backend-lala.onrender.com/proposal?topic=${encodeURIComponent(topic)}`
       );
 
       setProposal(

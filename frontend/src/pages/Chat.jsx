@@ -30,7 +30,7 @@ export default function Chat() {
       setLoading(true);
 
       const res = await axios.get(
-        `http://localhost:8000/ask-rag?question=${encodeURIComponent(question)}`
+        `https://ai-research-backend-lala.onrender.com/ask-rag?question=${encodeURIComponent(question)}`
       );
 
       setAnswer(

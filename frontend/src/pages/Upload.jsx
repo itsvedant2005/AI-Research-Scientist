@@ -26,7 +26,7 @@ export default function Upload() {
       );
 
       const res = await axios.post(
-        "http://localhost:8000/index-pdf",
+        "https://ai-research-backend-lala.onrender.com/index-pdf",
         formData,
         {
           headers: {

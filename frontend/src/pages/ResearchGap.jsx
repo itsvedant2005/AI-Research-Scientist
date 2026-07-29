@@ -15,7 +15,7 @@ export default function ResearchGap({ darkMode }) {
       setLoading(true);
 
       const res = await axios.get(
-        "http://localhost:8000/research-gap"
+        "https://ai-research-backend-lala.onrender.com/research-gap"
       );
 
       setResult(
