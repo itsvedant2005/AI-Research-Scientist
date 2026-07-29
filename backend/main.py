@@ -32,9 +32,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-         "https://ai-research-backend-lala.onrender.com/"
-        # Replace with your frontend URL after deployment
-        # "https://your-frontend.onrender.com",
+        "https://vedant-ai-research-scientist.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
