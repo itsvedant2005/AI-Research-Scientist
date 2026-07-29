@@ -1,35 +1,38 @@
-# AI Smart Property & House Planning Platform
+# 🧠 AI Research Scientist
 
-## Overview
+## 📝 Description
 
-An AI-powered platform that helps users:
+An AI-powered research assistant that enables users to upload research papers, ask intelligent questions, generate literature reviews, and retrieve accurate, context-aware answers using Retrieval-Augmented Generation (RAG) and Large Language Models (LLMs).
 
-- Search houses anywhere in the world
-- Predict house prices
-- Recommend nearby locations
-- Predict plot prices
-- Estimate construction costs
-- Generate conceptual house floor plans
-- Get AI-powered architectural suggestions
-- Download detailed project reports
+## 💻 Technologies Used
 
-## Tech Stack
+* React.js
+* FastAPI
+* Python
+* Groq (Llama 3.3) 
+* Sentence Transformers
+* FAISS
+* PyPDF2
+* Tailwind CSS
 
-### Frontend
-- React
-- Tailwind CSS
+## ⚙️ Working
 
-### Backend
-- FastAPI
+* Users can upload research papers in PDF format.
+* The system extracts and processes text from uploaded documents.
+* Text is converted into embeddings and stored in a FAISS vector database.
+* Relevant content is retrieved using RAG based on the user's query.
+* The AI model generates accurate answers and literature reviews using the retrieved context.
 
-### Machine Learning
-- CatBoost
-- XGBoost
-- LightGBM
-- Scikit-learn
+## ✨ Features
 
-### Database
-- PostgreSQL
+* AI-Powered Research Assistant
+* PDF Upload & Processing
+* RAG-Based Question Answering
+* Literature Review Generation
+* Semantic Search with FAISS
+* Context-Aware AI Responses
+* Fast & Interactive User Interface
 
-### AI
-- Gemini / Groq API
+## 👨‍💻 Author
+
+**Vedant Wankhede**
